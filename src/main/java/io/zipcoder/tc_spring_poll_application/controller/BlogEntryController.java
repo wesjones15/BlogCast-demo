@@ -2,6 +2,7 @@ package io.zipcoder.tc_spring_poll_application.controller;
 
 import io.zipcoder.tc_spring_poll_application.model.BlogEntry;
 import io.zipcoder.tc_spring_poll_application.repositories.BlogEntryRepository;
+import io.zipcoder.tc_spring_poll_application.service.BlogEntryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,7 +18,7 @@ import java.net.URI;
 @RestController
 public class BlogEntryController {
     @Autowired
-    BlogEntryRepository blogEntryRepository;
+    BlogEntryService blogEntryService;
 
 
 //    public PollController(PollRepository blogEntryRepository) {
@@ -26,21 +27,20 @@ public class BlogEntryController {
     @CrossOrigin(origins = "*")
     @RequestMapping(value = "/blogentry", method = RequestMethod.GET)
     public ResponseEntity<Iterable<BlogEntry>> getAllBlogEntries() {
-        Iterable<BlogEntry> allBlogEntries = blogEntryRepository.findAll();
+        Iterable<BlogEntry> allBlogEntries = blogEntryService.findAll();
         return new ResponseEntity<>(allBlogEntries, HttpStatus.OK);
     }
 
     @RequestMapping(value = "/blog/{blogId}/all", method = RequestMethod.GET)
     public ResponseEntity<Iterable<BlogEntry>> getAllEntriesForBlog(@PathVariable Long blogId) {
-        Iterable<BlogEntry> blogEntries = blogEntryRepository.findBlogEntriesByBlog(blogId);
+        Iterable<BlogEntry> blogEntries = blogEntryService.findAllForBlog(blogId);
         return new ResponseEntity<>(blogEntries, HttpStatus.OK);
     }
 
     @RequestMapping(value = "/blog/{blogId}/entry", method = RequestMethod.POST)
     public ResponseEntity<BlogEntry> addBlogEntryToBlog(@PathVariable Long blogId, @RequestBody BlogEntry blogEntry) {
-        blogEntry.setBlog_id(blogId);
         //TODO verify user signed in, require author field filled with user
-        blogEntry = blogEntryRepository.save(blogEntry);
+        blogEntry = blogEntryService.addToBlog(blogId, blogEntry);
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setLocation(ServletUriComponentsBuilder.fromCurrentRequest().path("/{blogId}").buildAndExpand(blogEntry.getBlog_id()).toUri());
         return new ResponseEntity<>(null, responseHeaders, HttpStatus.CREATED);
